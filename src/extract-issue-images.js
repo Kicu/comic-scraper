@@ -5,7 +5,18 @@ const log = console.log;
 // readType - all images, quality - HD
 const qualityAndTypeQuery = '&readType=1&quality=hq';
 
+// selectors
 const imagesSelector = '#divImage p img';
+const imagesLoaderSelector = '#imgLoader';
+
+const waitForImagesDelay = 3000;
+
+function checkIfImagesLoaded(loaderSelector) {
+    const imageLoader = document.querySelector(loaderSelector);
+    const imageLoaderStyles = imageLoader && imageLoader.style;
+
+    return (imageLoaderStyles.getPropertyValue('display') === 'none');
+}
 
 /**
  * Navigates to a specific issue page and extracts all the images for this issue,
@@ -15,9 +26,10 @@ const imagesSelector = '#divImage p img';
  * @returns {Promise.<{images: Array.<String>, title: String}>}
  */
 async function extractIssueImages(page, pageUrl) {
-    log('Requesting issue page');
+    log(`Requesting issue: ${pageUrl}`);
     await page.goto(pageUrl + qualityAndTypeQuery, {
-        timeout: 2 * 60 * 1000 // big timeout b/c there can be a lot of images
+        timeout: 3 * 60 * 1000, // big timeout b/c there can be a lot of images,
+        waitUntil : 'networkidle2'
     });
 
     await checkAndWaitForRedirect(page);
@@ -25,8 +37,21 @@ async function extractIssueImages(page, pageUrl) {
     const comicName = await extractIssueName(page);
     log(`Page ${comicName} ready`);
 
-    const imagesUrls = await page.evaluate((sel) => {
-        const issueImgElements = document.querySelectorAll(sel);
+    // run a loop checking if script that loads images finished and images are loaded
+    let imagesLoaded = false;
+    while (!imagesLoaded) {
+        imagesLoaded = await page.evaluate(checkIfImagesLoaded, imagesLoaderSelector);
+
+        if (!imagesLoaded) {
+            console.log('Waiting for images...');
+            await page.evaluate(() => window.scrollBy(0, window.innerHeight));
+            await delay(waitForImagesDelay);
+        }
+    }
+
+
+    const imagesUrls = await page.evaluate((imgSel) => {
+        const issueImgElements = document.querySelectorAll(imgSel);
 
         if (!issueImgElements) {
             return [];
@@ -36,7 +61,6 @@ async function extractIssueImages(page, pageUrl) {
         issueImgElements.forEach(img => images.push(img.src));
 
         return images;
-
     }, imagesSelector);
 
     log('Images extracted');

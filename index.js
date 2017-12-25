@@ -8,30 +8,26 @@ const downloadImages = require('./src/download-images');
 const zipImages = require('./src/zip-images');
 const { delay } = require('./src/utils');
 
-const pageUrl = 'http://readcomiconline.to/Comic/Dark-Reign-Fantastic-Four';
-
-(async () => {
-    // Prepare browser instance
-    const browser = await puppeteer.launch({
-        headless: true,
-        timeout: 0
-    });
-
+async function downloadComic(browser, comicPageUrl, issuePageUrl) {
     const page = await browser.newPage();
 
-    const issueList = await extractIssues(page, pageUrl);
+    let issueList;
+    if (issuePageUrl) {
+        issueList = [issuePageUrl];
+    } else {
+        issueList = await extractIssues(page, comicPageUrl);
 
-    // Change order to oldest first
-    issueList.reverse();
-
-    const [first, ...restIssues] = issueList;
+        // Change order to oldest first
+        issueList.reverse();
+    }
 
     const savedDirectories = [];
-    for (const issueUrl of restIssues) {
+    for (const issueUrl of issueList) {
         try {
             const { images, title } = await extractIssueImages(page, issueUrl);
 
-            const savedDir = await downloadImages(images, title);
+            const dirName = path.join('.', 'comics', title);
+            const savedDir = await downloadImages(images, dirName);
             savedDirectories.push(savedDir);
 
             await delay(900);
@@ -43,5 +39,15 @@ const pageUrl = 'http://readcomiconline.to/Comic/Dark-Reign-Fantastic-Four';
     await browser.close();
 
     // Zip folders into cbz
-    await zipImages(savedDirectories, path.join(__dirname, '.'));
+    await zipImages(savedDirectories, path.join(__dirname));
+}
+
+(async () => {
+    // Prepare browser instance
+    const browser = await puppeteer.launch({
+        headless: true,
+        timeout: 0
+    });
+
+    await downloadComic(browser, 'comic name');
 })();

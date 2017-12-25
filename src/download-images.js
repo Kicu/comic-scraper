@@ -6,6 +6,7 @@ const fetch = require('node-fetch');
 const log = console.log;
 
 const filenameRegex = /filename="(\w+.(jpg|png|jpeg))"/;
+const retryImageRequestCount = 3;
 
 /**
  * Try to get name for file, using in order
@@ -55,13 +56,18 @@ async function downloadImages(imgUrlList, dirName) {
 
     for (let i = 0; i < imgUrlList.length; i++) {
         const imgUrl = imgUrlList[i];
+        let j = 0;
 
-        try {
-            log(`Requesting ${imgUrl}...`);
-            const savedFileName = await requestAndSaveFile(imgUrl, dirName, i);
-            log(`${savedFileName} succesfully saved`);
-        } catch (err) {
-            log(`Error: ${err}`);
+        while(j < retryImageRequestCount) {
+            try {
+                log(`Requesting ${imgUrl}`);
+                const savedFileName = await requestAndSaveFile(imgUrl, dirName, i);
+                log(`${savedFileName} succesfully saved`);
+                j = 99; // cut off further retrying
+            } catch (err) {
+                log(`Error: ${err}`);
+                log(`Retry attempt #${++j}`);
+            }
         }
     }
 
