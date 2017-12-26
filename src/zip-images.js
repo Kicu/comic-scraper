@@ -20,7 +20,7 @@ function checkIfDirectoryNonEmpty(dirName) {
 async function zipImages(dirsList, basePath) {
     for (const dirName of dirsList) {
         // skip zipping empty dirs
-        const dirNotEmpty = await checkIfDirectoryNonEmpty(dirName);
+        const dirNotEmpty = await checkIfDirectoryNonEmpty(path.join(basePath, dirName));
         if (!dirNotEmpty) {
             continue;
         }
