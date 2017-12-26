@@ -28,14 +28,13 @@ function checkIfImagesLoaded(loaderSelector) {
 async function extractIssueImages(page, pageUrl) {
     log(`Requesting issue: ${pageUrl}`);
     await page.goto(pageUrl + qualityAndTypeQuery, {
-        timeout: 3 * 60 * 1000, // big timeout b/c there can be a lot of images,
-        waitUntil : 'networkidle2'
+        timeout: 3 * 60 * 1000, // big timeout b/c there can be a lot of images
     });
 
     await checkAndWaitForRedirect(page);
 
     const comicName = await extractIssueName(page);
-    log(`Page ${comicName} ready`);
+    log(`--- Page ${comicName} ready`);
 
     // run a loop checking if script that loads images finished and images are loaded
     let imagesLoaded = false;

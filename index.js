@@ -22,17 +22,39 @@ async function downloadComic(browser, comicPageUrl, issuePageUrl) {
     }
 
     const savedDirectories = [];
+    const failedIssues = [];
     for (const issueUrl of issueList) {
         try {
             const { images, title } = await extractIssueImages(page, issueUrl);
 
             const dirName = path.join('.', 'comics', title);
             const savedDir = await downloadImages(images, dirName);
+
+            if (!savedDir) {
+                failedIssues.push({ images, title });
+            }
             savedDirectories.push(savedDir);
 
             await delay(900);
         } catch (err) {
             console.trace(err);
+        }
+    }
+
+    // retry failed downloads
+    console.log('Retrying failed downloads');
+    if (failedIssues.length) {
+        for (const { images, title } of failedIssues) {
+            try {
+                const dirName = path.join('.', 'comics', title);
+                const savedDir = await downloadImages(images, dirName);
+
+                savedDirectories.push(savedDir);
+
+                await delay(900);
+            } catch (err) {
+                console.trace(err);
+            }
         }
     }
 
@@ -49,5 +71,5 @@ async function downloadComic(browser, comicPageUrl, issuePageUrl) {
         timeout: 0
     });
 
-    await downloadComic(browser, 'comic name');
+    await downloadComic(browser, '');
 })();

@@ -54,6 +54,8 @@ async function downloadImages(imgUrlList, dirName) {
         fs.mkdirSync(dirName);
     }
 
+    let atLeastOneFailed = false;
+
     for (let i = 0; i < imgUrlList.length; i++) {
         const imgUrl = imgUrlList[i];
         let j = 0;
@@ -67,11 +69,15 @@ async function downloadImages(imgUrlList, dirName) {
             } catch (err) {
                 log(`Error: ${err}`);
                 log(`Retry attempt #${++j}`);
+                if (j === retryImageRequestCount) {
+                    atLeastOneFailed = true;
+                }
             }
         }
     }
 
-    return dirName;
+    // If images were properly downloaded return the name of directory for further processing, undefined else
+    return atLeastOneFailed ? undefined : dirName;
 }
 
 module.exports = downloadImages;
