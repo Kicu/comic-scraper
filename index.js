@@ -42,8 +42,8 @@ async function downloadComic(browser, comicPageUrl, issuePageUrl) {
     }
 
     // retry failed downloads
-    console.log('Retrying failed downloads');
     if (failedIssues.length) {
+        console.log('Retrying failed downloads');
         for (const { images, title } of failedIssues) {
             try {
                 const dirName = path.join('.', 'comics', title);
@@ -61,7 +61,7 @@ async function downloadComic(browser, comicPageUrl, issuePageUrl) {
     await browser.close();
 
     // Zip folders into cbz
-    await zipImages(savedDirectories, path.join(__dirname));
+    await zipImages(savedDirectories.filter(Boolean), path.join(__dirname));
 }
 
 (async () => {

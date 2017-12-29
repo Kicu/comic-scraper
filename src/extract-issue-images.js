@@ -10,6 +10,7 @@ const imagesSelector = '#divImage p img';
 const imagesLoaderSelector = '#imgLoader';
 
 const waitForImagesDelay = 3000;
+const pageTimeout = 2 * 60 * 1000; // big timeout b/c there can be a lot of images
 
 function checkIfImagesLoaded(loaderSelector) {
     const imageLoader = document.querySelector(loaderSelector);
@@ -26,15 +27,16 @@ function checkIfImagesLoaded(loaderSelector) {
  * @returns {Promise.<{images: Array.<String>, title: String}>}
  */
 async function extractIssueImages(page, pageUrl) {
+    log(`----------`);
     log(`Requesting issue: ${pageUrl}`);
     await page.goto(pageUrl + qualityAndTypeQuery, {
-        timeout: 3 * 60 * 1000, // big timeout b/c there can be a lot of images
+        timeout: pageTimeout
     });
 
     await checkAndWaitForRedirect(page);
 
     const comicName = await extractIssueName(page);
-    log(`--- Page ${comicName} ready`);
+    log(`Page ${comicName} ready`);
 
     // run a loop checking if script that loads images finished and images are loaded
     let imagesLoaded = false;

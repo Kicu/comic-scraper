@@ -68,9 +68,10 @@ async function downloadImages(imgUrlList, dirName) {
                 j = 99; // cut off further retrying
             } catch (err) {
                 log(`Error: ${err}`);
-                log(`Retry attempt #${++j}`);
                 if (j === retryImageRequestCount) {
                     atLeastOneFailed = true;
+                } else {
+                    log(`Retry attempt #${++j}`);
                 }
             }
         }
