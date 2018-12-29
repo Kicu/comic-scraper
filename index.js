@@ -1,6 +1,7 @@
 const path = require('path');
 
 const puppeteer = require('puppeteer');
+const argv = require('yargs').argv;
 
 const extractIssues = require('./src/extract-issues');
 const extractIssueImages = require('./src/extract-issue-images');
@@ -65,11 +66,21 @@ async function downloadComic(browser, comicPageUrl, issuePageUrl) {
 }
 
 (async () => {
+    const { comic, issue } = argv;
+    if (!comic && !issue) {
+        console.log('No valid URL provided');
+        return;
+    }
+
     // Prepare browser instance
     const browser = await puppeteer.launch({
         headless: true,
         timeout: 0
     });
 
-    await downloadComic(browser, '');
+    if (comic) {
+        await downloadComic(browser, comic);
+    } else {
+        await downloadComic(browser, undefined, issue);
+    }
 })();
